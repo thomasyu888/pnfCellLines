@@ -7,7 +7,7 @@ receiving data from CIDR
 vcf2maf='perl ../../../vcf2maf-master/vcf2maf.pl'
 ##REFERENCE FASTA installation
 ##UPDATE WITH new
-reffasta='../../lib/ucsc.hg19.fasta'
+reffasta='../../lib/human_g1k_v37.fasta.gz'
 ##OUTPUT FROM GATK:
 
 
