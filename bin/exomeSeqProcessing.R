@@ -20,7 +20,7 @@ getAnnovarFiles<-function(reStore=FALSE){
     
     return(tab)}))
   write.table(all.dat,file='annovarSamplesWithCellLineNameGenotype.tsv',sep='\t',row.names=F)
-  synStore(File('annovarSamplesWithCellLineNameGenotype.tsv',parentId='syn6086887'))
+  synStore(File('annovarSamplesWithCellLineNameGenotype.tsv',parentId='syn6086887'),used=list(list(executed="https://raw.githubusercontent.com/sgosline/pnfCellLines/master/bin/exomeSeqProcessing.R")))
     }
   else{
     
