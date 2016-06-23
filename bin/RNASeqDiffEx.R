@@ -99,9 +99,11 @@ plotGenesInSamples<-function(obj,transcripts,units="tpm",
   if (units == "tpm") {
     tabd_df <- dplyr::select(tabd_df, gene,target_id, sample,
                              tpm)
-    if(collapseByGene)
+    if(collapseByGene){
         tabd_df <- reshape2::dcast(tabd_df, gene ~ sample,
                                    value.var = "tpm", fun.aggregate=sum)
+        annotes<-NULL
+    }
    else
         tabd_df <- reshape2::dcast(tabd_df, target_id ~ sample,
                                    value.var = "tpm")
@@ -109,9 +111,11 @@ plotGenesInSamples<-function(obj,transcripts,units="tpm",
   else if (units == "est_counts") {
     tabd_df <- dplyr::select(tabd_df, gene,target_id, sample,
                              est_counts)
-    if(collapseByGene)
+    if(collapseByGene){
         tabd_df <- reshape2::dcast(tabd_df, gene ~ sample,
                                    value.var = "est_counts", fun.aggregate=sum)
+        annotes<-NULL
+    }
     else
         tabd_df <- reshape2::dcast(tabd_df, target_id ~ sample,
                                    value.var = "est_counts")
@@ -128,13 +132,12 @@ plotGenesInSamples<-function(obj,transcripts,units="tpm",
   else
     cul=NULL
 
-  if(test=='OneAllele'){
+  if('OneAllele+'%in%colnames(dm)){
         oa=rep("-",nrow(dm))
         names(oa)<-rownames(dm)
         oa[which(dm[,'OneAllele+']==1)]<-'+'
         adf=data.frame(OneNF1=oa)
-  }else if(test%in%c('Genotype','Culture')){
-
+  }else{
       genotype=rep("++",nrow(dm))
       names(genotype)<-rownames(dm)
       genotype[which(dm[,'Genotype+-']==1)]<-'+-'
@@ -144,10 +147,7 @@ plotGenesInSamples<-function(obj,transcripts,units="tpm",
   if(!is.null(cul))
     adf$Culture=cul
 
-
-
-
-    if(!is.null(genes))
+    if(!is.null(genes)&&!collapseByGene)
         rownames(tabd_df) <- genes[tabd_df[,1]]
     else
         rownames(tabd_df)=tabd_df[,1]
@@ -158,14 +158,14 @@ plotGenesInSamples<-function(obj,transcripts,units="tpm",
 
   require(pheatmap)
   if(is.null(annotes))
-      pheatmap(t(log2(tabd_df[,-1]+0.01)),cellheight=10,cellwidth=10,
-               annotation_row=adf,clustering_distance_rows='correlation',
+      pheatmap(log2(tabd_df[,-1]+0.01),cellheight=10,cellwidth=10,
+               annotation_col=adf,clustering_distance_rows='correlation',
                clustering_distance_cols='correlation',filename=fname)
   else
-      pheatmap(t(log2(tabd_df[,-1]+0.01)),cellheight=10,cellwidth=10,
-               annotation_row=adf,clustering_distance_rows='correlation',
+      pheatmap(log2(tabd_df[,-1]+0.01),cellheight=10,cellwidth=10,
+               annotation_col=adf,clustering_distance_rows='correlation',
                clustering_distance_cols='correlation',
-               annotation_col=data.frame(Type=annotes),filename=fname)
+               annotation_row=data.frame(Type=annotes),filename=fname)
 
 }
 
@@ -191,7 +191,8 @@ plotSingleGene<-function(obj,gene,prefix=''){
     dev.off()
 }
 
-plotVals<-function(data.obj,qval,ttype=c(),prefix='',test='OneAllele',alt='+'){
+plotVals<-function(data.obj,qval,ttype=c(),prefix='',test='OneAllele',alt='+',collapseByGene=FALSE){
+  
   res=sleuth_results(data.obj, paste(test,alt,sep=''))
   sel=which(res$qval<qval)
   print(paste("Found",length(sel),'diff ex transcripts at q=',qval))
@@ -213,7 +214,7 @@ plotVals<-function(data.obj,qval,ttype=c(),prefix='',test='OneAllele',alt='+'){
 
   names(tnames)<-targs
   names(trans.type)<-tnames
-  plotGenesInSamples(data.obj,targs,'tpm',tnames,trans.type[sel],fname=paste(prefix,'diffex',paste(ttype,collapse='_'),'TranscriptsQ',qval,'.png',sep=''))
+  plotGenesInSamples(data.obj,targs,'tpm',tnames,trans.type[sel],fname=paste(prefix,'diffex',paste(ttype,collapse='_'),ifelse(collapseByGene,'Genes','Transcripts'),'Q',qval,'.png',sep=''),collapseByGene=collapseByGene)
 
 
 }
