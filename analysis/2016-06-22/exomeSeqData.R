@@ -34,4 +34,6 @@ plot(hclust(dist(t(het.mat)),method='ward'),main='Heterozygous non-synonymous va
 plot(hclust(dist(t(hom.mat)),method='ward'),main='Homozygous non-synonymous variants')
 dev.off()
 
-synStore(File('',parentId='syn6174634'),used=list(list(executed=''),list(entity=''))
+synStore(File('exomeSeqClustering.png',parentId='syn6174634'),
+         executed=list(list(url='https://raw.githubusercontent.com/sgosline/pnfCellLines/master/analysis/2016-06-22/exomeSeqData.R')),
+                used=list(list(entity='syn6086887')))
