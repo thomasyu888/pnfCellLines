@@ -43,3 +43,13 @@ os.system('bcftools reheader -s newHeader.txt H_Blakeley_NF1_WGHum-SeqWholeExome
 os.system('bgzip '+newfile)
 ##now index
 os.system('bcftools index -t '+newfile+'.gz')
+
+script='https://raw.githubusercontent.com/sgosline/pnfCellLines/master/analysis/2016-07-07/remapVcfSamples.py'
+idxfile=synapseclient.entity.File(newfile+'.gz.tbi',parentId='syn6086899')
+gzfile=synapseclient.entity.File(newfile+'.gz',parentId='syn6086899')
+
+origfile='syn6091968'
+
+##now store the two new files
+syn.store(idxfile,used=origfile,executed=script)
+syn.store(gzfile,used=origfile,executed=script)

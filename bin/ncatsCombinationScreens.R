@@ -9,10 +9,11 @@ library(data.table)
 library(pheatmap)
 synapseLogin()
 library(ggplot2)
+require(dplyr)
 require(reshape2)
 screendirs=list(`10x10`='syn5611797',`6x6`='syn5611796')
 
-getFileForCombo<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
+getMetdataForCombo<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
     if(measure=='CCG'&&comboScreen=='6x6'){
       print('CCG data not available for 6x6, evaluating with CTG')
       measure='CTG'
@@ -27,7 +28,6 @@ getFileForCombo<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
       allf<-allf[grep(measure,allf[,1]),]
       meta<-data.frame(fread(synGet(allf[grep('metadata',allf[,1]),2])@filePath))
       calc<-data.frame(fread(synGet(allf[grep('calc',allf[,1]),2])@filePath))
-      resp<-data.frame(fread(synGet(allf[grep('resp',allf[,1]),2])@filePath))
       ##not sure which values to use?  
       combined<-cbind(meta,calc)
       ##return rowtrug, row target, col drug, col target, and some synergy score....
@@ -35,6 +35,80 @@ getFileForCombo<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
     })
     names(cell.dat)<-cells[,1]
     return(cell.dat)
+}
+
+#getFileForCombo<-function(...){ getMetadataForCombo(...)}
+
+getResponseData<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
+  if(measure=='CCG'&&comboScreen=='6x6'){
+    print('CCG data not available for 6x6, evaluating with CTG')
+    measure='CTG'
+  }
+  
+  fileparent=screendirs[[comboScreen]]  
+  cells=synapseQuery(paste("select name,id from entity where parentId=='",fileparent,"'",sep=''))
+  print(paste('Retrieved',nrow(cells),'cell types for',comboScreen,'screen'))
+  
+  cell.dat<-lapply(cells[,1],function(x){
+    synid=cells[match(x,cells[,1]),2]
+    allf<-synapseQuery(paste("select name,id from entity where parentId=='",synid,"'",sep=''))
+    allf<-allf[grep(measure,allf[,1]),]
+    
+    meta<-data.frame(fread(synGet(allf[grep('metadata',allf[,1]),2])@filePath))
+    
+    resp<-data.frame(fread(synGet(allf[grep('resp',allf[,1]),2])@filePath))
+    ##not sure which values to use?  
+    all.mats<-lapply(unique(resp$BlockId),function(x) acast(subset(resp,BlockId==x),Row~Col,value.var="Value",fun.aggregate=mean))
+    names(all.mats)<-unique(resp$BlockId)
+    
+    named.mats<-lapply(names(all.mats),function(x){
+      mval<-all.mats[[x]]
+      metas<-subset(meta,BlockId==x)
+      cols<-unlist(strsplit(metas$ColConcs,split=','))
+      rows<-unlist(strsplit(metas$RowConcs,split=','))
+      rownames(mval)<-rows
+      colnames(mval)<-cols
+      return(mval)
+    })
+    names(named.mats)<-names(all.mats)
+    
+    ##return rowtrug, row target, col drug, col target, and some synergy score....
+    return(named.mats)
+  })
+  names(cell.dat)<-cells[,1]
+  return(cell.dat)
+  
+}
+
+
+##this function formats data for the synergy package - CURRENTLY UNFINISHED....
+getSynergyData<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
+  if(measure=='CCG'&&comboScreen=='6x6'){
+    print('CCG data not available for 6x6, evaluating with CTG')
+    measure='CTG'
+  }
+  
+  fileparent=screendirs[[comboScreen]]  
+  cells=synapseQuery(paste("select name,id from entity where parentId=='",fileparent,"'",sep=''))
+  print(paste('Retrieved',nrow(cells),'cell types for',comboScreen,'screen'))
+  
+  cell.dat<-lapply(cells[,1],function(x){
+    synid=cells[match(x,cells[,1]),2]
+    allf<-synapseQuery(paste("select name,id from entity where parentId=='",synid,"'",sep=''))
+    allf<-allf[grep(measure,allf[,1]),]
+    
+    meta<-data.frame(fread(synGet(allf[grep('metadata',allf[,1]),2])@filePath))
+    
+    resp<-data.frame(fread(synGet(allf[grep('resp',allf[,1]),2])@filePath))
+    ##not sure which values to use?  
+  
+    
+    ##return rowtrug, row target, col drug, col target, and some synergy score....
+    return(named.mats)
+  })
+  names(cell.dat)<-cells[,1]
+  return(cell.dat)
+  
 }
 
 
