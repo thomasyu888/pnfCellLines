@@ -1,34 +1,50 @@
 source("../../bin/ncatsCombinationScreens.R")
 
+
 ##test out plots by parameters -box plots
 for(combo in c('6x6','10x10')){
-  files<-getFileForCombo(combo,'CTG')
+  cells<-getCellForCombo(combo)
+  
+  files<-lapply(cells[,1],function(x) getMetadataForCombo(x,combo,'CTG'))
+  names(files)<-cells[,1]
   for(val in c('Beta','DBSumNeg','DBSumPos','Gamma')){
     res<-plotValsAcrossCells(files,paste(combo,'CTG',sep=''),val)
     lms<-doLinearModel(res,paste(combo,'CTG',val,'Values',sep=''))
   }
 }
 combo='6x6'
-files<-getFileForCombo(combo,'CTG')
+cells<-getCellForCombo(combo)
+
+files<-lapply(cells[,1],function(x) getMetadataForCombo(x,combo,'CTG'))
+names(files)<-cells[,1]
+
 row.targs<-unique(unlist(lapply(files,function(x) return(x$RowTarget))))
 col.targs<-unique(unlist(lapply(files,function(x) return(x$ColTarget))))
 write.table(data.frame(Row=row.targs,Col=col.targs),file='NCATS_targets_6x6.tsv',sep='\t',row.names=F,col.names=T)
 
-combo='10x10'
-files<-getFileForCombo(combo,'CTG')
-row.targs<-unique(unlist(lapply(files,function(x) return(x$RowTarget))))
-col.targs<-unique(unlist(lapply(files,function(x) return(x$ColTarget))))
-write.table(data.frame(Row=row.targs,Col=col.targs),file='NCATS_targets_10x10.tsv',sep='\t',row.names=F,col.names=T)
+files<-lapply(cells[,1],function(x) getMetadataForCombo(x,combo,'CTG'))
+names(files)<-cells[,1]
 
-
-combo='6x6'
-files<-getFileForCombo(combo,'CTG')
 row.targs<-unique(unlist(lapply(files,function(x) return(x$RowName))))
 col.targs<-unique(unlist(lapply(files,function(x) return(x$ColName))))
 write.table(data.frame(Row=row.targs,Col=col.targs),file='NCATS_drugs_6x6.tsv',sep='\t',row.names=F,col.names=T)
 
 combo='10x10'
-files<-getFileForCombo(combo,'CTG')
+cells<-getCellForCombo(combo)
+
+files<-lapply(cells[,1],function(x) getMetadataForCombo(x,combo,'CTG'))
+names(files)<-cells[,1]
+
+row.targs<-unique(unlist(lapply(files,function(x) return(x$RowTarget))))
+col.targs<-unique(unlist(lapply(files,function(x) return(x$ColTarget))))
+write.table(data.frame(Row=row.targs,Col=col.targs),file='NCATS_targets_10x10.tsv',sep='\t',row.names=F,col.names=T)
+
+
+
+combo='10x10'
+files<-lapply(cells[,1],function(x) getMetadataForCombo(x,combo,'CTG'))
+names(files)<-cells[,1]
+
 row.targs<-unique(unlist(lapply(files,function(x) return(x$RowName))))
 col.targs<-unique(unlist(lapply(files,function(x) return(x$ColName))))
 write.table(data.frame(Row=row.targs,Col=col.targs),file='NCATS_drugs_10x10.tsv',sep='\t',row.names=F,col.names=T)

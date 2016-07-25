@@ -10,20 +10,36 @@ library(pheatmap)
 synapseLogin()
 library(ggplot2)
 require(dplyr)
+require(tidyr)
 require(reshape2)
 screendirs=list(`10x10`='syn5611797',`6x6`='syn5611796')
 
-getMetdataForCombo<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
+
+#'Get list of all cells available for combo and measure
+#'@param comboScreen
+#'@return data frame from synapse table query
+getCellForCombo<-function(comboScreen=c('10x10','6x6'))
+{
+  fileparent=screendirs[[comboScreen]]  
+  cells=synapseQuery(paste("select name,id from entity where parentId=='",fileparent,"'",sep=''))
+  print(paste('Retrieved',nrow(cells),'cell types for',comboScreen,'screen'))
+  return(cells)
+}
+
+#'Get associated metadata for cell, combo and measure
+#'@param cell name of cell to be evaluated
+#'@param comboScreen either 6x6 or 10x10
+#'@param measure either CTG or CCG (for 10x10 only)
+#'@return data frame of stats for particular cell 
+getMetadataForCombo<-function(cell='HFF',comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
     if(measure=='CCG'&&comboScreen=='6x6'){
       print('CCG data not available for 6x6, evaluating with CTG')
       measure='CTG'
     }
       
-    fileparent=screendirs[[comboScreen]]  
-    cells=synapseQuery(paste("select name,id from entity where parentId=='",fileparent,"'",sep=''))
-    print(paste('Retrieved',nrow(cells),'cell types for',comboScreen,'screen'))
-    cell.dat<-lapply(cells[,1],function(x){
-      synid=cells[match(x,cells[,1]),2]
+#    cell.dat<-lapply(cells[,1],function(x){
+    cells<-getCellForCombo(comboScreen)
+      synid=cells[match(cell,cells[,1]),2]
       allf<-synapseQuery(paste("select name,id from entity where parentId=='",synid,"'",sep=''))
       allf<-allf[grep(measure,allf[,1]),]
       meta<-data.frame(fread(synGet(allf[grep('metadata',allf[,1]),2])@filePath))
@@ -32,25 +48,26 @@ getMetdataForCombo<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')
       combined<-cbind(meta,calc)
       ##return rowtrug, row target, col drug, col target, and some synergy score....
       return(combined)
-    })
-    names(cell.dat)<-cells[,1]
-    return(cell.dat)
+ 
 }
 
-#getFileForCombo<-function(...){ getMetadataForCombo(...)}
 
-getResponseData<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
+#' Get response matrix for combination screen
+#' 
+#' @param cell - name of cell to be evaluated
+#' @param comboScreen - either 6x6 or 10x10
+#' @param measure - either CTG or CCG (for 10x10only)
+#' @return matrix representing the fraction of the cells remaining
+getResponseData<-function(cell='HFF',comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
   if(measure=='CCG'&&comboScreen=='6x6'){
     print('CCG data not available for 6x6, evaluating with CTG')
     measure='CTG'
   }
+
+  cells<-getCellForCombo(comboScreen)
   
-  fileparent=screendirs[[comboScreen]]  
-  cells=synapseQuery(paste("select name,id from entity where parentId=='",fileparent,"'",sep=''))
-  print(paste('Retrieved',nrow(cells),'cell types for',comboScreen,'screen'))
-  
-  cell.dat<-lapply(cells[,1],function(x){
-    synid=cells[match(x,cells[,1]),2]
+ # cell.dat<-lapply(cells[,1],function(x){
+    synid=cells[match(cell,cells[,1]),2]
     allf<-synapseQuery(paste("select name,id from entity where parentId=='",synid,"'",sep=''))
     allf<-allf[grep(measure,allf[,1]),]
     
@@ -74,47 +91,78 @@ getResponseData<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
     
     ##return rowtrug, row target, col drug, col target, and some synergy score....
     return(named.mats)
-  })
-  names(cell.dat)<-cells[,1]
-  return(cell.dat)
   
 }
 
 
-##this function formats data for the synergy package - CURRENTLY UNFINISHED....
-getSynergyData<-function(comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
+#'Format synergy data to be used by the synergyfinder R package
+#'There is a bug in the synergy calculators so try to use https://github.com/sgosline/synergyfinder
+#'@param cell cell of interest
+#'@param comboScreen either 6x6 or 10x10
+#'@param measure either CTG or CCG (for 10x10 only)
+#'@return list of data to be analyzed by synergyfinder
+#'
+getSynFinderData<-function(cell='HFF',comboScreen=c('10x10','6x6'),measure=c('CTG','CCG')){
   if(measure=='CCG'&&comboScreen=='6x6'){
     print('CCG data not available for 6x6, evaluating with CTG')
     measure='CTG'
   }
   
-  fileparent=screendirs[[comboScreen]]  
-  cells=synapseQuery(paste("select name,id from entity where parentId=='",fileparent,"'",sep=''))
-  print(paste('Retrieved',nrow(cells),'cell types for',comboScreen,'screen'))
+
+#  cell.dat<-lapply(cells[,1],function(x){
   
-  cell.dat<-lapply(cells[,1],function(x){
-    synid=cells[match(x,cells[,1]),2]
-    allf<-synapseQuery(paste("select name,id from entity where parentId=='",synid,"'",sep=''))
-    allf<-allf[grep(measure,allf[,1]),]
+  synid=cells[match(cell,cells[,1]),2]
+  allf<-synapseQuery(paste("select name,id from entity where parentId=='",synid,"'",sep=''))
+  allf<-allf[grep(measure,allf[,1]),]
     
-    meta<-data.frame(fread(synGet(allf[grep('metadata',allf[,1]),2])@filePath))
+  meta<-data.frame(fread(synGet(allf[grep('metadata',allf[,1]),2])@filePath))
     
-    resp<-data.frame(fread(synGet(allf[grep('resp',allf[,1]),2])@filePath))
-    ##not sure which values to use?  
-  
+  resp<-data.frame(fread(synGet(allf[grep('resp',allf[,1]),2])@filePath))
+
+    ##first separate out row and column concentrations
+    if(comboScreen=='6x6'){
+      rowCon=paste('row',c(1,2,3,4,5,6),sep='_')
+      colCon=paste('col',c(1,2,3,4,5,6),sep='_')
+    }else{
+      rowCon=paste('row',c(1,2,3,4,5,6,7,8,9,10),sep='_')
+      colCon=paste('col',c(1,2,3,4,5,6,7,8,9,10),sep='_')
+    }
+    fullDf<-tidyr::separate(meta,RowConcs,into=rowCon,sep=',')%>%tidyr::separate(ColConcs,into=colCon,sep=',')
     
+    if(comboScreen=='6x6'){
+      rowdf<-fullDf%>%select(match(c("BlockId",rowCon),names(fullDf)))%>%tidyr::gather('Row','RowConc',2:7)%>%arrange(BlockId)
+      coldf<-fullDf%>%select(match(c("BlockId",colCon),names(fullDf)))%>%tidyr::gather('Col','ColConc',2:7)%>%arrange(BlockId)
+    } else{
+      rowdf<-fullDf%>%select(match(c("BlockId",rowCon),names(fullDf)))%>%tidyr::gather('Row','RowConc',2:11)%>%arrange(BlockId)
+      coldf<-fullDf%>%select(match(c("BlockId",colCon),names(fullDf)))%>%tidyr::gather('Col','ColConc',2:11)%>%arrange(BlockId)
+      
+    }   
+    ##now rename rows and columns
+    rowdf$Row<-sapply(rowdf$Row,function(x) gsub('row_','',x))
+    coldf$Col<-sapply(coldf$Col,function(x) gsub('col_','',x))
+    
+    metdf<-select(fullDf,match(c('BlockId','RowName','ColName','RowConcUnit','ColConcUnit'),colnames(fullDf)))
+    
+    ##join rows and columns, sort both the metadata and responses in the same order
+    jm<-full_join(metdf,rowdf,by='BlockId')%>%full_join(coldf,by='BlockId')%>%arrange(Col)%>%arrange(Row)%>%arrange(BlockId)
+    resp<-resp%>%arrange(Col)%>%arrange(Row)%>%arrange(BlockId)
+    
+    final.df<-bind_cols(jm,select(resp,c(Value,Replicate)))%>%select(c(BlockId,Row,Col,Value,Replicate,RowName,ColName,RowConc,ColConc,RowConcUnit))
+    colnames(final.df)<-c('BlockID','Row','Col','Response','Replicate','DrugRow','DrugCol','ConcRow','ConcCol','ConcUnit')
+    final.df$ConcRow<-as.numeric(final.df$ConcRow)
+    final.df$ConcCol<-as.numeric(final.df$ConcCol)
     ##return rowtrug, row target, col drug, col target, and some synergy score....
-    return(named.mats)
-  })
-  names(cell.dat)<-cells[,1]
-  return(cell.dat)
-  
+    return(final.df)
+
 }
 
 
 
-##how to plot values acros cells - experiment with the best way to visualize the data in its 
-##initial form
+#'Plot synergy metdata values across cells - experiment with the best way to visualize the data in its 
+#'@param file.list list of results from getMetadataForCombo function, nam
+#'@param prefix to add to file
+#'@param value Which synergy value to collect from metadata
+#'@return data frame of all results
 plotValsAcrossCells<-function(file.list,prefix='',value='Beta'){
   fres<-do.call('rbind',lapply(names(file.list),function(y){
     x<-file.list[[y]]
@@ -148,7 +196,11 @@ plotValsAcrossCells<-function(file.list,prefix='',value='Beta'){
 }
 
 
-
+#'Performs a linear model to evaluate if there were speicfic combinations that were more synergistic
+#'than others based on value assessed
+#'@param value.df DataFrame returned by plotValsAcrossCells
+#'@param prefix for file to save
+#'@return list of drug coefficients and target coefficients
 doLinearModel<-function(value.df,prefix){
   
   lres<-lm(Value~Row+Col+Cell+Row*Col,value.df)
@@ -168,6 +220,11 @@ doLinearModel<-function(value.df,prefix){
   
 }
 
+#'Plot the results of the linear model
+#'@param lmres results from doLinearModel
+#'@param value.df Original input into same function
+#'@param pval pvalue cutoff
+#'
 plotLMResults<-function(lmres,value.df,pval=0.05){
     combos<-lmres[grep(':',rownames(lmres)),]
     combos<-cbind(combos,t(sapply(rownames(combos),function(x) unlist(strsplit(gsub("Row|Col",'',x),split=':')))))
