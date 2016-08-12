@@ -40,6 +40,7 @@ getMetadataForCombo<-function(cell='HFF',comboScreen=c('10x10','6x6'),measure=c(
 #    cell.dat<-lapply(cells[,1],function(x){
     cells<-getCellForCombo(comboScreen)
       synid=cells[match(cell,cells[,1]),2]
+     # print(synid)
       allf<-synapseQuery(paste("select name,id from entity where parentId=='",synid,"'",sep=''))
       allf<-allf[grep(measure,allf[,1]),]
       meta<-data.frame(fread(synGet(allf[grep('metadata',allf[,1]),2])@filePath))
