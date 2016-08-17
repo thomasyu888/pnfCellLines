@@ -76,9 +76,10 @@ rnaKallistoMatrix<-function(buildFromFiles=FALSE,metric='tpm',useCellNames=FALSE
 
     }
   if(useCellNames){
-    annotes=rnaAnnotations()
-    colnames(tab)<-annotes[colnames(tab)]
-}
+    annotes=synTableQuery('SELECT "Sample Name","RNA-Seq Data" FROM syn5014742 where "RNA-Seq Data" is not null')
+  colnames(tab)<-annotes$`Sample Name`[match(colnames(tab),annotes$`RNA-Seq Data`)]
+
+ }
   if(byGene){
       if(metric=='est_counts')
           print("Estimated counts should not be collapsed by gene, please use 'tpm' as metric")
@@ -118,8 +119,9 @@ rnaGencodeKallistoMatrix<-function(buildFromFiles=FALSE,metric='tpm',useCellName
 
     }
   if(useCellNames){
-    annotes=rnaAnnotations(gencode=TRUE)
-    colnames(tab)<-annotes[colnames(tab)]
+    annotes=synTableQuery('SELECT "Sample Name","RNA-Seq Data (Gencode)" FROM syn5014742 where "RNA-Seq Data (Gencode)" is not null')@values
+    colnames(tab)<-annotes$`Sample Name`[match(colnames(tab),annotes$`RNA-Seq Data (Gencode)`)]
+    
 }
 
     if(byGene){

@@ -30,7 +30,7 @@ per.gene.vals<-t(sapply(genes,function(x){
     return(colSums(tpm.vals[vals,],na.rm=T))
   else
     return(tpm.vals[vals,])
-  
+
 }))
 
 zscore<-function(x){
@@ -47,3 +47,22 @@ idx<-match(colnames(z.score.gene),cell.line.names$`RNA-Seq Data (Gencode)`)
 colnames(z.score.gene)<-cell.line.names$`Sample Name`[idx]
 
 ##get other nf data
+comm.genes<-intersect(rownames(ccle.tiss.averages),rownames(z.score.gene))
+library(pheatmap)
+cmat<-cbind(z.score.gene[comm.genes,],ccle.tiss.averages[comm.genes,])
+
+##let's plot!
+pdf('ccle_pnf_dendrogram.pdf')
+plot(hclust(dist(t(cmat))),main='CCLE Cell lines with pNF cell lines')
+dev.off()
+
+synStore(File('ccle_pnf_dendrogram.pdf',parentId='syn5594111'),executed=list(list(url='https://raw.githubusercontent.com/sgosline/pnfCellLines/master/analysis/2016-08-12/clusterCellLinesByExpression.R')),used=list(list(entity='syn5580347')))
+
+pdf('ccle_pnf_cor_dendrogram.pdf')
+plot(hclust(as.dist(1-cor(cmat,use='pairwise.complete.obs'))),main='CCLE Cell lines with pNF cell lines')
+dev.off()
+
+synStore(File('ccle_pnf_dendrogram.pdf',parentId='syn5594111'),executed=list(list(url='https://raw.githubusercontent.com/sgosline/pnfCellLines/master/analysis/2016-08-12/clusterCellLinesByExpression.R')),used=list(list(entity='syn5580347')))
+
+
+synStore(File('ccle_pnf_cor_dendrogram.pdf',parentId='syn5594111'),executed=list(list(url='https://raw.githubusercontent.com/sgosline/pnfCellLines/master/analysis/2016-08-12/clusterCellLinesByExpression.R')),used=list(list(entity='syn5580347')))
