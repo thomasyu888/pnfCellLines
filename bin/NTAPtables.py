@@ -2,6 +2,7 @@ import synapaseclient
 import pandas as pd
 syn = synapseclient.login()
 
+#Table 1:
 #Project Entity -- Number of Files uploaded -- Number of contributors  -- Date of latest upload
 #> synapseid, number of files total to the project, number of contributors, last modified on date
 allNTAPprojects = syn.tableQuery('SELECT * FROM syn5867440')
@@ -51,7 +52,8 @@ else:
 #Table 2: Files by assay type
 #Assay Type -- Number of Files -- Number of Cell Lines
 #> assay, grab number of unique synapseid, sampleIdentifier
-ntap_generated_data = syn.tableQuery('SELECT * FROM syn7805078')
+ntap_generated_data_synId = "syn7805078"
+ntap_generated_data = syn.tableQuery('SELECT * FROM %s' % ntap_generated_data_synId)
 ntap_generated_data_df = ntap_generated_data.asDataFrame()
 
 annot_synIds = ["syn7506024"]
@@ -74,7 +76,25 @@ for synId in annot_synIds:
 		else:
 			assaysNumSampleId[i] = assaysNumSampleId[i] + numId
 
+removeAssay = []
 for i in assaysNumSynId.keys():
-	
+	oldValues = ntap_generated_data_df[ntap_generated_data_df['assayType'] == i]
+	newValues = [i, assaysNumSynId[i], assaysNumSampleId[i]]
+	if oldValues.empty:
+		ntap_generated_data_df = ntap_generated_data_df.append(pd.DataFrame([newValues],columns=['assayType','numberOfFiles','numberOfCellLines']))
+	else:
+		if not all([old == new for old, new in zip(oldValues.values[0], newValues)]):
+			ntap_generated_data_df[ntap_generated_data_df['assayType'] == i] = newValues
+		else:
+			removeAssay.append(i)
 		
+newUploads = ntap_generated_data_df[~ntap_generated_data_df['assayType'].isin(removeAssay)]
+if not newUploads.empty:
+	newUploads['numberOfFiles'] = newUploads['numberOfFiles'].apply(int)
+	newUploads['numberOfCellLines'] = newUploads['numberOfCellLines'].apply(int)
+	schema = syn.get(ntap_generated_data_synId)
+	tablestore = Table(schema, newUploads, etag=ntap_generated_data.etag)
+	tablestore = syn.store(tablestore)
+else:
+	print("No updates!")
 
