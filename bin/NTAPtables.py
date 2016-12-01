@@ -2,8 +2,6 @@ import synapaseclient
 import pandas as pd
 syn = synapseclient.login()
 
-
-
 #Project Entity -- Number of Files uploaded -- Number of contributors  -- Date of latest upload
 #> synapseid, number of files total to the project, number of contributors, last modified on date
 allNTAPprojects = syn.tableQuery('SELECT * FROM syn5867440')
@@ -50,11 +48,9 @@ else:
 	print("No updates!")
 
 
-
 #Table 2: Files by assay type
 #Assay Type -- Number of Files -- Number of Cell Lines
 #> assay, grab number of unique synapseid, sampleIdentifier
-
 ntap_generated_data = syn.tableQuery('SELECT * FROM syn7805078')
 ntap_generated_data_df = ntap_generated_data.asDataFrame()
 
@@ -66,12 +62,19 @@ for synId in annot_synIds:
 	annotations = syn.tableQuery('SELECT * FROM %s' % synId)
 	annot_table = annotations.asDataFrame()
 	assays = set(annot_table['assay'])
-	total = []
 	for i in assays:
-		if assaysNumSynId.get(i) is None:
-			assaysNumSynId
 		numAssay = len(set(annot_table['synapseId'][annot_table['assay'] == i]))
 		numId = len(set(annot_table['sampleIdentifier'][annot_table['assay'] == i]))
-		total.append([i, numAssay, numId])
+		if assaysNumSynId.get(i) is None:
+			assaysNumSynId[i] = numAssay
+		else:
+			assaysNumSynId[i] = assaysNumSynId[i] + numAssay
+		if assaysNumSampleId.get(i) is None:
+			assaysNumSampleId[i] = numId
+		else:
+			assaysNumSampleId[i] = assaysNumSampleId[i] + numId
 
+for i in assaysNumSynId.keys():
+	
+		
 
