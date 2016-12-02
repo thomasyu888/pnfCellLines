@@ -1,4 +1,5 @@
-import synapaseclient
+import synapseclient
+from synapseclient import Table
 import pandas as pd
 syn = synapseclient.login()
 
@@ -56,7 +57,7 @@ ntap_generated_data_synId = "syn7805078"
 ntap_generated_data = syn.tableQuery('SELECT * FROM %s' % ntap_generated_data_synId)
 ntap_generated_data_df = ntap_generated_data.asDataFrame()
 
-annot_synIds = ["syn7506024"]
+annot_synIds = ["syn7506024","syn7805075"]
 assaysNumSynId = {}
 assaysNumSampleId = {}
 
@@ -78,17 +79,18 @@ for synId in annot_synIds:
 
 removeAssay = []
 for i in assaysNumSynId.keys():
-	oldValues = ntap_generated_data_df[ntap_generated_data_df['assayType'] == i]
-	newValues = [i, assaysNumSynId[i], assaysNumSampleId[i]]
+	oldValues = ntap_generated_data_df[ntap_generated_data_df['assay'] == i]
+	newValues = {'assay':i, 'numberOfFiles':assaysNumSynId[i], 'numberOfCellLines':assaysNumSampleId[i]}
 	if oldValues.empty:
-		ntap_generated_data_df = ntap_generated_data_df.append(pd.DataFrame([newValues],columns=['assayType','numberOfFiles','numberOfCellLines']))
+		ntap_generated_data_df = ntap_generated_data_df.append(pd.DataFrame(newValues, index=[0]))
 	else:
-		if not all([old == new for old, new in zip(oldValues.values[0], newValues)]):
-			ntap_generated_data_df[ntap_generated_data_df['assayType'] == i] = newValues
+		if not all([oldValues[old].values[0] == newValues[old] for old, new in zip(oldValues, newValues)]):
+			ntap_generated_data_df['numberOfCellLines'][ntap_generated_data_df['assay'] == i] = newValues['numberOfCellLines']
+			ntap_generated_data_df['numberOfFiles'][ntap_generated_data_df['assay'] == i] = newValues['numberOfFiles']
 		else:
 			removeAssay.append(i)
 		
-newUploads = ntap_generated_data_df[~ntap_generated_data_df['assayType'].isin(removeAssay)]
+newUploads = ntap_generated_data_df[~ntap_generated_data_df['assay'].isin(removeAssay)]
 if not newUploads.empty:
 	newUploads['numberOfFiles'] = newUploads['numberOfFiles'].apply(int)
 	newUploads['numberOfCellLines'] = newUploads['numberOfCellLines'].apply(int)
