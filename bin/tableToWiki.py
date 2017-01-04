@@ -2,7 +2,6 @@ import synapseclient
 
 syn = synapseclient.login()
 
-
 def writeWholeTable(table):
 	rowset = table.asRowSet()
 	wikiTable =  "|".join([head['name'] for head in rowset['headers']]) + "\n"
@@ -31,7 +30,6 @@ def writeProjectTables(table, getProjectIndex):
 		wikiTable  = wikiTable + "|".join(row['values']) + "\n"
 	return(wikiTable)
 
-
 ##Projects   syn4939478/wiki/235831
 
 table = syn.tableQuery('SELECT Name, Project_Title, Tumor_Focus, Synapse_ID FROM syn5867440 Where Active = True')
@@ -39,7 +37,6 @@ firstTable = writeProjectTables(table, -1)
 
 table = syn.tableQuery('SELECT * FROM syn7239496')
 secondTable = writeProjectTables(table, 1)
-
 
 markdown = ("Many NTAP-funded initiatives already have data that are being uploaded to Synapse so they can be downloaded.  "
  "Below is a table of projects with data.\n\n%s\n"
@@ -52,19 +49,16 @@ wikipage = syn.getWiki(syn.get('syn4990358'),"411306")
 wikipage.markdown = markdown
 syn.store(wikipage)
 
-
-### Data upload    syn4939478/wiki/396217
+### Data upload   syn4939478/wiki/396217
 
 table = syn.tableQuery('select * from syn7804884 order by "lateModified" DESC')
 firstTable = writeProjectTables(table, 0)
 table = syn.tableQuery('select * from syn7805078')
 secondTable = writeWholeTable(table)
 
-
 markdown = ("#### _NTAP Project updates will be released here periodically_\n\n"
  "Here is a summary of the latest activity by project:\n%s\n\n"
  "There are numerous types of data available:\n\n%s") % (firstTable, secondTable)
-
 
 wikipage = syn.getWiki(syn.get('syn4990358'),"411306")
 wikipage.markdown = markdown
