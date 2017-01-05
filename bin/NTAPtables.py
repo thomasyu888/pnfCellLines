@@ -57,7 +57,7 @@ ntap_generated_data_synId = "syn7805078"
 ntap_generated_data = syn.tableQuery('SELECT * FROM %s' % ntap_generated_data_synId)
 ntap_generated_data_df = ntap_generated_data.asDataFrame()
 
-annot_synIds = ["syn7506024","syn7805075"]
+annot_synIds = ["syn7506024","syn7805075","syn7992153"]
 assaysNumSynId = {}
 assaysNumSampleId = {}
 

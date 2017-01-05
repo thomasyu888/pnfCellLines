@@ -60,6 +60,6 @@ markdown = ("#### _NTAP Project updates will be released here periodically_\n\n"
  "Here is a summary of the latest activity by project:\n%s\n\n"
  "There are numerous types of data available:\n\n%s") % (firstTable, secondTable)
 
-wikipage = syn.getWiki(syn.get('syn4990358'),"411306")
+wikipage = syn.getWiki(syn.get('syn4990358'),"411324")
 wikipage.markdown = markdown
 syn.store(wikipage)
