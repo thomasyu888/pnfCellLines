@@ -51,15 +51,16 @@ syn.store(wikipage)
 
 ### Data upload   syn4939478/wiki/396217
 
-table = syn.tableQuery('select * from syn7804884 order by "lateModified" DESC')
+table = syn.tableQuery('select projectEntity, numberOfFiles, numberOfContributors, lateModified from syn7804884 where Active = True order by "lateModified" DESC')
 firstTable = writeProjectTables(table, 0)
 table = syn.tableQuery('select * from syn7805078')
 secondTable = writeWholeTable(table)
 
-markdown = ("#### _NTAP Project updates will be released here periodically_\n\n"
- "Here is a summary of the latest activity by project:\n%s\n\n"
- "There are numerous types of data available:\n\n%s") % (firstTable, secondTable)
+markdown = "Here is a summary of the latest activity by project:\n%s\n\n" % firstTable
 
-wikipage = syn.getWiki(syn.get('syn4990358'),"411324")
+
+ #"There are numerous types of data available:\n\n%s") % (firstTable, secondTable)
+
+wikipage = syn.getWiki(syn.get('syn4939478'),"411657")
 wikipage.markdown = markdown
 syn.store(wikipage)

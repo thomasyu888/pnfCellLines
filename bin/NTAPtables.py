@@ -8,13 +8,14 @@ syn = synapseclient.login()
 #> synapseid, number of files total to the project, number of contributors, last modified on date
 allNTAPprojects = syn.tableQuery('SELECT * FROM syn5867440')
 allNTAPprojects_df = allNTAPprojects.asDataFrame()
+allNTAPprojects_df = allNTAPprojects_df.drop_duplicates("Synapse_ID")
 
 projectUploadActivitySynId = "syn7804884"
 projectTracker = syn.tableQuery('select * from %s' % projectUploadActivitySynId)
 projectTrackerDf = projectTracker.asDataFrame()
 projectTrackerDf['lateModified'] = projectTrackerDf['lateModified'].fillna(0)
 removeSamples = []
-for synId in allNTAPprojects_df['Synapse_ID']:
+for index, synId in enumerate(allNTAPprojects_df['Synapse_ID']):
 	temp = syn.chunkedQuery('select id, createdByPrincipalId, modifiedOn from file where projectId == "%s"' % synId)
 	modifiedOn = []
 	createdBy = []
@@ -28,14 +29,14 @@ for synId in allNTAPprojects_df['Synapse_ID']:
 	else:
 		mod = 0
 	oldValues = projectTrackerDf[projectTrackerDf['projectEntity'] == synId]
-	newValues = [synId, count, len(set(createdBy)), mod]
+	newValues = [synId, count, len(set(createdBy)), mod, allNTAPprojects_df['Active'][index]]
 	if not oldValues.empty:
 		if not all([old == new for old, new in zip(oldValues.values[0], newValues)]):
 			projectTrackerDf[projectTrackerDf['projectEntity'] == synId] = newValues
 		else:
 			removeSamples.append(synId)
 	else:
-		projectTrackerDf = projectTrackerDf.append(pd.DataFrame([newValues],columns=['projectEntity','numberOfFiles','numberOfContributors','lateModified']))
+		projectTrackerDf = projectTrackerDf.append(pd.DataFrame([newValues],columns=['projectEntity','numberOfFiles','numberOfContributors','lateModified','Active']))
 
 newUploads = projectTrackerDf[~projectTrackerDf['projectEntity'].isin(removeSamples)]
 if not newUploads.empty:
