@@ -49,12 +49,12 @@ wikipage = syn.getWiki(syn.get('syn4990358'),"411306")
 wikipage.markdown = markdown
 syn.store(wikipage)
 
-### Data upload   syn4939478/wiki/396217
+### Data upload   syn4939478/wiki/411657
 
 table = syn.tableQuery('select projectEntity, numberOfFiles, numberOfContributors, lateModified from syn7804884 where Active = True order by "lateModified" DESC')
 firstTable = writeProjectTables(table, 0)
-table = syn.tableQuery('select * from syn7805078')
-secondTable = writeWholeTable(table)
+#table = syn.tableQuery('select * from syn7805078')
+#secondTable = writeWholeTable(table)
 
 markdown = "Here is a summary of the latest activity by project:\n%s\n\n" % firstTable
 

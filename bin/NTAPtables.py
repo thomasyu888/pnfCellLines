@@ -6,6 +6,7 @@ syn = synapseclient.login()
 #Table 1:
 #Project Entity -- Number of Files uploaded -- Number of contributors  -- Date of latest upload
 #> synapseid, number of files total to the project, number of contributors, last modified on date
+#https://www.synapse.org/#!Synapse:syn4939478/wiki/411657 
 allNTAPprojects = syn.tableQuery('SELECT * FROM syn5867440')
 allNTAPprojects_df = allNTAPprojects.asDataFrame()
 allNTAPprojects_df = allNTAPprojects_df.drop_duplicates("Synapse_ID")
@@ -54,6 +55,7 @@ else:
 #Table 2: Files by assay type
 #Assay Type -- Number of Files -- Number of Cell Lines
 #> assay, grab number of unique synapseid, sampleIdentifier
+#https://www.synapse.org/#!Synapse:syn4939478/wiki/411658
 ntap_generated_data_synId = "syn7805078"
 ntap_generated_data = syn.tableQuery('SELECT * FROM %s' % ntap_generated_data_synId)
 ntap_generated_data_df = ntap_generated_data.asDataFrame()
