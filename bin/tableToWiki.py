@@ -32,22 +32,22 @@ def writeProjectTables(table, getProjectIndex):
 
 ##Projects   syn4939478/wiki/235831
 
-table = syn.tableQuery('SELECT Name, Project_Title, Tumor_Focus, Synapse_ID FROM syn5867440 Where Active = True')
-firstTable = writeProjectTables(table, -1)
+# table = syn.tableQuery('SELECT Name, Project_Title, Tumor_Focus, Synapse_ID FROM syn5867440 Where Active = True')
+# firstTable = writeProjectTables(table, -1)
 
-table = syn.tableQuery('SELECT * FROM syn7239496')
-secondTable = writeProjectTables(table, 1)
+# table = syn.tableQuery('SELECT * FROM syn7239496')
+# secondTable = writeProjectTables(table, 1)
 
-markdown = ("Many NTAP-funded initiatives already have data that are being uploaded to Synapse so they can be downloaded.  "
- "Below is a table of projects with data.\n\n%s\n"
- "In addition to the NTAP-funded grants, NTAP is working closely with [Sage Bionetworks](http://www.sagebase.org) "
- "to carry out systems-level analysis on NF-related datasets.  "
- "Those projects can be browsed below.\n\n%s\n"
- "To view a complete list of NTAP projects, go to [NTAP Projects](https://www.synapse.org/#!Synapse:syn5867440/)" ) % (firstTable, secondTable)
+# markdown = ("Many NTAP-funded initiatives already have data that are being uploaded to Synapse so they can be downloaded.  "
+#  "Below is a table of projects with data.\n\n%s\n"
+#  "In addition to the NTAP-funded grants, NTAP is working closely with [Sage Bionetworks](http://www.sagebase.org) "
+#  "to carry out systems-level analysis on NF-related datasets.  "
+#  "Those projects can be browsed below.\n\n%s\n"
+#  "To view a complete list of NTAP projects, go to [NTAP Projects](https://www.synapse.org/#!Synapse:syn5867440/)" ) % (firstTable, secondTable)
 
-wikipage = syn.getWiki(syn.get('syn4990358'),"411306")
-wikipage.markdown = markdown
-syn.store(wikipage)
+# wikipage = syn.getWiki(syn.get('syn4990358'),"411306")
+# wikipage.markdown = markdown
+# syn.store(wikipage)
 
 ### Data upload   syn4939478/wiki/411657
 
